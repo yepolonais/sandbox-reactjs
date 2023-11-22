@@ -3,14 +3,14 @@ import ReactDOM from 'react-dom/client';
 import './index.css';
 import App from './App';
 import reportWebVitals from './reportWebVitals';
-import { Component, MyButton } from './Component';
+import { Component, Counter } from './Component';
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
   <React.StrictMode>
     <App />
     <Component user={"polo"} primary/>
-    <MyButton/>
+    <Counter/>
   </React.StrictMode>
 );
 

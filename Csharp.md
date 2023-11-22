@@ -1,0 +1,1 @@
+l'instruction switch peut être remplacée par "case var x when x = ..."
