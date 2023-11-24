@@ -30,8 +30,8 @@ WHERE permet de filtrer les résultats où l'id_address dans la table Entity et 
 Cette requête est parfaitement acceptable. Toutefois il existe une syntaxe dédiée pour effectuer la même opération :
 ``` sql
 SELECT name, e.id_address 
-FROM entity as e
-JOIN address as a ON e.id_address = a.id_address
+FROM entity e
+JOIN address a ON e.id_address = a.id_address
 ```
 Ce qui nous amène au jointure !
 
@@ -120,25 +120,65 @@ GROUP BY status, name;
 ```
 Ceci va afficher le nombre d'occurrence par (status + name) dans la table entity. 
 
+Lorsque l'on souhaite appliquer une restriction sur le résultat d'une fonction d'aggregation, il n'est pas possible de le faire dans le WHERE.
+En effet à ce moment-là, l'aggregation n'a pas encore été effectuée.
+C'est la que le mot clé HAVING entre en jeu :
+``` sql
+SELECT status, name, count(*)
+FROM entity
+GROUP BY status, name
+HAVING count(*) > 50;
+```
+Ici on ne conservera que les résultats dont le nombre d'occurrence est supérieur à 50.
 
-# Extraire les véhicules ( ) n'ayant aucune pièce ( ) associée.
-SELECT vehicle_id
-FROM vehicle
-LEFT JOIN vehicle_part ON vehicle.vehicle_id = vehicle_part.vehicle_id
+Il est possible d'effectuer une recherche de string avec le mot clé LIKE
+``` sql
+SELECT name 
+FROM entity
+WHERE lower(name) LIKE 'a%';
+```
+Ici on va rechercher l'ensemble des entités dont le nom commence par a. 
+* % représente de 0 à l'infini caratère.
+* _ représente un unique caractère inconnu
+* lower() permet d'éviter les soucis liés à la casse
 
-# Extrait les véhicules n'ayant pas d'entrée dans la table vehicle_part
-SELECT vehicle_id
-FROM vehicle
-LEFT JOIN vehicle_part ON vehicle.vehicle_id = vehicle_part.vehicle_id
-WHERE vehicle_part.vehicle_id IS NULL;
 
-# Groupe suivant une fonction d'aggrégat. Ici le nombre d'occurrence pour ...
-SELECT year, COUNT(*) AS "toto"
-FROM movies 
-GROUP BY year
-HAVING COUNT(*) > 5;
+## Sous Requête
+Il est possible d'utiliser le résultat d'une requête pour effectuer une autre requête avec.
+Cela devient un peu tordu, mais on peut par exemple :
+* Récupérer dans la table entity les entités dont l'adresse ID apparait plus de 500x
+* Afficher les adresses complètes correspondantes extraite de la table address
 
-# Filtre des données suivant plusieurs paramètres
-SELECT vehicle_part_id, 
-FROM vehicle_part_location
-WHERE location_id IN (3, 6, 12) AND left_timestamp IS NOT NULL
+Pour effectuer cette requête imbriquée on utilise IN :
+``` sql
+SELECT *
+FROM address a
+WHERE a.id_address IN (
+    SELECT id_address
+    FROM entity
+    GROUP BY id_address
+    HAVING count(*) > 500
+    );
+```
+
+Une façon simple d'appréhender cette requête est de réfléchir en terme de table résultante.
+La requête imbriquée renvoie la liste des id_address dont le nombre dépasse 500 (une seule col, plusieurs lignes).
+A partir de cette liste, on va pouvoir afficher les adresses qui possède ces id_address.
+
+Il est possible d'effectuer cette recherche sur plusieurs critères:
+``` sql
+SELECT * 
+FROM t1 
+WHERE t1.valeur1, t1.valeur2 IN (SELECT c1, c2 FROM t2) ;
+```
+Ici on recherche t1.valeur dans c1 et t2.valeur dans c2.
+
+Ce qui nous fait arriver aux opérateur ANY et ALL. Voici deux requêtes simple permettant de les expliquer
+``` sql
+SELECT Nom
+FROM Employes
+WHERE Salaire > ALL (SELECT Salaire FROM Salaires WHERE Departement = 'IT');
+```
+Cette requête retournera les employés dont le salaire est supérieur à TOUS les salaires du département IT
+L'utilisation ANY aurait retourné les employés dont le salaire est supérieur à AU MOINS UN salaire du département IT - le plus bas, du coup.
+Les opérateurs ALL et ANY attendent donc une liste en paramètre.
