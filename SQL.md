@@ -182,3 +182,30 @@ WHERE Salaire > ALL (SELECT Salaire FROM Salaires WHERE Departement = 'IT');
 Cette requête retournera les employés dont le salaire est supérieur à TOUS les salaires du département IT
 L'utilisation ANY aurait retourné les employés dont le salaire est supérieur à AU MOINS UN salaire du département IT - le plus bas, du coup.
 Les opérateurs ALL et ANY attendent donc une liste en paramètre.
+
+## Fonctions Windows
+
+Attention, les fonctions windows ne fonctionnent pas avec MySQL.
+Nous avons vu tout à l'heure que cette fonction retournera une erreur :
+``` sql
+SELECT id_address, min(id) 
+FROM entity ;
+```
+En effet, il manque un Group by sur id_address.
+Avec la fonction OVER(), il est toutefois de dupliquer la valeur du minimum sur autant de ligne que contenue dans la table entity :
+``` sql
+SELECT id_address, min(id) OVER()
+FROM entity ;
+```
+
+Cette fonction OVER() peut-être étendue. Par exemple on peut souhaiter obtenir l'id minimum pour chaque adresse au lieu de l'id minimum global :
+``` sql
+SELECT id_address, min(id) OVER(PARTITION BY id_address)
+FROM entity ;
+```
+
+Enfin, on peut souhaiter afficher les noms des sociétés également, en les triant en ordre ASC :
+``` sql
+SELECT id_address,name, min(id) OVER(PARTITION BY id_address ORDER BY name)
+FROM entity ;
+```
