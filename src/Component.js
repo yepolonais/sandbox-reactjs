@@ -18,3 +18,20 @@ export function Component({primary, user}) {
         <button onClick={handleClick}>{counter}</button>
         );
   }
+
+  export function Counter_2() {
+    const [counter, setCounter] = useState(0);
+    function handleClickPos () {
+      setCounter(counter + 1);
+    };
+    function handleClickMin () {
+        setCounter(counter - 1);
+      };
+    return (
+        <div>
+            <p id="value">{counter}</p>
+            <button id="increment" onClick={handleClickPos}>+</button>
+            <button id="decrement" onClick={handleClickMin}>-</button>
+        </div>
+    )
+}
